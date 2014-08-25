@@ -11,7 +11,7 @@ with 'Dist::Zilla::Role::MainModuleReader';
 around '_default_source_file' => sub {
     my $orig = shift;
     my $self = shift;
-    my $pm = $self->orig();
+    my $pm = $self->$orig();
     (my $pod = $pm) =~  s/\.pm$/\.pod/;
     return -e $pod ? $pod : $pm;
 };

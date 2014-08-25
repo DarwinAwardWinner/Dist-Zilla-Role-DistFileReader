@@ -3,6 +3,8 @@ use warnings;
 package Dist::Zilla::Role::DistFileReader;
 # ABSTRACT: Something that reads the content of a dist file
 
+use Moose::Autobox;
+
 use Moose::Role;
 
 with 'Dist::Zilla::Role::Plugin';
@@ -45,7 +47,8 @@ has source_update_is_fatal => (
 # generated a readme from it. We use this to detect when the source
 # file is modified so we can update the README file again.
 has _last_source_content => (
-    is => 'rw', isa => 'Str',
+    is => 'rw',
+    isa => 'Str',
     default => '',
 );
 
@@ -79,13 +82,13 @@ sub watch_for_source_updates {
     my ($self) = shift;
     if (not $self->_watching)
     {
-        my $source_file = $self->file_from_filename($self->source_file);
+        my $source_file = $self->_file_from_filename($self->source_file);
         require Dist::Zilla::Role::File::ChangeNotification;
         Dist::Zilla::Role::File::ChangeNotification->meta->apply($source_file);
         my $plugin = $self;
         $source_file->on_changed(sub {
             my ($self, $newcontent) = @_;
-            if ($newcontent ne $self->_last_source_content) {
+            if ($newcontent ne $plugin->_last_source_content) {
                 $plugin->on_source_file_update($newcontent);
             }
         });
@@ -102,9 +105,10 @@ Returns the content of the source file as a string.
 
 sub content_for_source_file {
     my ($self) = shift;
-    my $source_file = $self->file_from_filename($self->source_file);
+    my $source_file = $self->_file_from_filename($self->source_file);
+    my $source_content = $self->_last_source_content($source_file->content);
     $self->watch_for_source_updates();
-    return $self->_last_source_content($source_file->content);
+    return $source_content;
 }
 
 =method on_source_file_update
