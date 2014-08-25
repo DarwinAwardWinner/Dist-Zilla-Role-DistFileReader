@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package Dist::Zilla::Role::DistFileReader;
-# ABSTRACT: Something that reads the content of a dist file
+# ABSTRACT: Something that reads the content of a dist file, safely
 
 use Moose::Autobox;
 
@@ -11,8 +11,8 @@ with 'Dist::Zilla::Role::Plugin';
 
 =attr source_file
 
-The name of the file to read from. This should be a perl module file
-that will be added to the dist.
+The name of the file to read from. This should be the name of a file
+in the dist.
 
 =cut
 
@@ -43,17 +43,26 @@ has source_update_is_fatal => (
     default => 1,
 );
 
-# Holds the contents of the source file as of the last time we
-# generated a readme from it. We use this to detect when the source
-# file is modified so we can update the README file again.
+=attr _last_source_content
+
+This holds the contents of the source file as of the last time this
+plugin read it. We use this to detect when the source file is modified.
+
+=cut
+
 has _last_source_content => (
     is => 'rw',
     isa => 'Str',
     default => '',
 );
 
-# This is used to implement the idempotent behavior of
-# watch_for_source_updates
+=attr _watching
+
+This is a flag that gets set the first time the source file is read.
+It is used to avoid setting multiple watchers on the file.
+
+=cut
+
 has _watching => (
     is => 'rw',
     isa => 'Bool',
@@ -146,12 +155,25 @@ __END__
 
 =head1 SYNOPSIS
 
-    use Dist::Zilla::Role::DistFileReader;
-    [Example code]
+    package Dist::Zilla::Plugin::MyPlugin;
+    with 'Dist::Zilla::Role::DistFileReader';
+
+    sub do_something_with_file_content {
+        my $content = $self->content_for_source_file;
+        $self->log("Source file's content is:\n$content");
+    }
 
 =head1 DESCRIPTION
 
-[Description for C<Dist::Zilla::Role::DistFileReader>.]
+This role provides a number of conveniences for plugins that read the
+content of a generated dist file and operate on that content. The most
+important feature is that if the generated dist file is modified by a
+FileMunger after its content has already been read, this role will (by
+default) throw an error. This ensures that a build is only successful
+if the plugin operates on the final content of the source file.
+
+Plugins consuming this role will have two configuation options added:
+C<source_file> and C<source_update_is_fatal>.
 
 =head1 BUGS AND LIMITATIONS
 
@@ -162,6 +184,7 @@ C<rct+perlbug@thompsonclan.org>.
 
 =for :list
 
-* [L<Some::Related::Module>]
+* L<Dist::Zilla::Plugin::ReadmeAnyFromPod>
 
-  [Description of how this module is related]
+  ReadmeAnyFromPod uses this role (via the MainPodReader role) to read
+  the main module content safely.
