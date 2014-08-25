@@ -175,6 +175,12 @@ if the plugin operates on the final content of the source file.
 Plugins consuming this role will have two configuation options added:
 C<source_file> and C<source_update_is_fatal>.
 
+=head2 TESTS
+
+There are no tests for this distribution, because
+L<Dist::Zilla::Plugin::ReadmeAnyFromPod> excercises nearly all the
+features of this module.
+
 =head1 BUGS AND LIMITATIONS
 
 Please report any bugs or feature requests to
