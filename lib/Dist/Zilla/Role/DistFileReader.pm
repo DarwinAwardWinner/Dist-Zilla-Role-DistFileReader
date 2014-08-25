@@ -128,6 +128,15 @@ sub on_source_file_update {
     }
 }
 
+sub source_encoding {
+    my ($self) = shift;
+    my $source_file = $self->_file_from_filename($self->source_file);
+    return
+        $source_file->can('encoding')
+            ? $source_file->encoding
+            : 'raw';        # Dist::Zilla pre-5.0
+}
+
 1;
 __END__
 
